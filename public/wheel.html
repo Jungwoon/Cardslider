@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!--Firebase-->
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-firestore.js"></script>
+
+    <title>Lucky Draw</title>
+
+    <link rel="stylesheet" href="css/wheel.css" type="text/css"/>
+    <script type="text/javascript" src="js/Winwheel.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.17.0/TweenMax.min.js"></script>
+
+    <style>
+        body {
+            background: #FFDD00;
+        }
+
+    </style>
+
+</head>
+<body>
+<img class="img-fluid" src="img/respond-top.jpg" style="margin-bottom: 15px"/>
+
+<div align="center" class="container-fluid">
+    <!-- Always set canvas to largest desired size, i.e. desktop PC size, it will be scaled down for smaller devices but never scaled up -->
+    <canvas id="canvas" width="500" height="500" data-responsiveMinWidth="180"
+            data-responsiveScaleHeight="true" onClick="startSpin();">
+        <p style="{color: white}" align="center">Sorry, your browser doesn't support canvas. Please try another.</p>
+    </canvas>
+</div>
+
+<script>
+
+    let theWheel;
+
+    function initWheel(numSegments, segments) {
+        return new Winwheel({
+            'numSegments': numSegments,     // Specify number of segments.
+            'fillStyle': '#FFDD00',
+            'lineWidth': 1.5,
+            'textAlignment': 'center',
+            'textFontSize': 15,    // Set font size as desired.
+            'responsive': true,  // This wheel is responsive!
+            'segments': JSON.parse(segments),
+            'animation':           // Specify the animation to use.
+                {
+                    'type': 'spinToStop',
+                    'duration': 5,     // Duration in seconds.
+                    'spins': 8,     // Number of complete spins.
+                    'callbackFinished': function (indicatedSegment) {
+                        // Do basic alert of the segment text. You would probably want to do something more interesting with this information.
+                        alert("You have won " + indicatedSegment.text);
+                    }
+                }
+        });
+    }
+
+    // -----------------------------------------------------------------
+    // Called by the onClick of the canvas, starts the spinning.
+    function startSpin() {
+        // Stop any current animation.
+        theWheel.stopAnimation(false);
+
+        // Reset the rotation angle to less than or equal to 360 so spinning again
+        // works as expected. Setting to modulus (%) 360 keeps the current position.
+        theWheel.rotationAngle = theWheel.rotationAngle % 360;
+
+        // Start animation.
+        theWheel.startAnimation();
+    }
+
+    firebase.initializeApp({
+        apiKey: '',
+        authDomain: '',
+        projectId: ''
+    });
+
+    const firestore = firebase.firestore();
+
+    let wheelNum = 0;
+    let wheelSegment = "[";
+
+    firestore.collection("history").get().then(function(querySnapshot) {
+        console.log("querySnapshot.length : ", querySnapshot.length);
+        querySnapshot.forEach(function(doc) {
+            wheelNum = wheelNum + 1;
+            if (wheelNum % 2 === 0) {
+                wheelSegment += "{\"fillStyle\": \"#ffffff\", \"text\": \"" + doc.data().name + "\"},";
+            } else {
+                wheelSegment += "{\"fillStyle\": \"#FFDD00\", \"text\": \"" + doc.data().name + "\"},";
+            }
+        });
+    }).then(function() {
+        wheelSegment = wheelSegment.substr(0, wheelSegment.length - 1);
+        wheelSegment += "]";
+        console.log('wheelNum:', wheelNum);
+        console.log('wheelSegment:', wheelSegment);
+        theWheel = initWheel(wheelNum, wheelSegment);
+    }).catch(function(error) {
+        console.log("Error: ", error);
+    });
+
+</script>
+</body>
+</html>

@@ -57,7 +57,7 @@
         cardSlider.changeCardTo('last');
     });
 
-    setInterval(function() {
+    setInterval(function () {
         cardSlider.nextCard();
         console.log("interval test")
     }, 5000);
@@ -97,14 +97,32 @@
             cardSlider.changeCardTo('last');
             console.log("Current data: ", doc.data());
 
-            firestore.collection("history").add({
-                name: name,
-                contents: contents,
+            let isDuplicate = false;
+
+            firestore.collection('history').get().then(function (querySnapshot) {
+                querySnapshot.forEach(function (doc) {
+                    if (doc.data().name.toString() === name.toString()) {
+                        console.log("duplicate(): ", name);
+                        isDuplicate = true;
+                    }
+                });
             }).then(function () {
-                console.log("Status saved");
+                if (!isDuplicate) {
+                    console.log("not duplicate(): ", name);
+
+                    firestore.collection("history").add({
+                        name: name,
+                        contents: contents,
+                    }).then(function () {
+                        console.log("History Status saved");
+                    }).catch(function (error) {
+                        console.error("Error adding document: ", error);
+                    });
+                }
             }).catch(function (error) {
-                console.error("Error adding document: ", error);
+                console.log("error: ", error);
             });
+
         }
 
     });
