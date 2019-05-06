@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!--Firebase-->
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-firestore.js"></script>
+
+    <!--     Fonts and icons     -->
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+
+    <title>Input Form</title>
+
+    <style>
+        body {
+            background: #FFDD00;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<img class="img-fluid" src="img/action-top.jpg"/>
+
+<div class="container">
+
+    <form>
+        <div class="form-group">
+            <label for="inputName"><h4 class="text-dark">Name</h4></label>
+            <input type="text" class="form-control" id="inputName" placeholder="Name" style="border: none; background: transparent;">
+        </div>
+        <div class="form-group">
+            <label for="inputGuestBook"><h4 class="text-dark">Message</h4></label>
+            <textarea class="form-control" id="inputGuestBook" placeholder="Message" rows="4" style="background: transparent; border-color: #000000"></textarea>
+        </div>
+    </form>
+
+    <button class="btn btn-block" id="submitButton" style="background: #000000; color: #FFFFFF">Send</button>
+
+    <div class="modal fade" id="doneModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    Done
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script src="js/jquery.min.js"></script>
+
+<script>
+
+    const inputName = document.querySelector('#inputName');
+    const inputGuestBook = document.querySelector('#inputGuestBook');
+    const submitButton = document.querySelector("#submitButton");
+
+    firebase.initializeApp({
+        apiKey: '',
+        authDomain: '',
+        projectId: ''
+    });
+
+    const firestore = firebase.firestore();
+
+    submitButton.addEventListener("click", function () {
+        const timeStamp = + new Date();
+        const writerName = inputName.value;
+        const writerGuestBook = inputGuestBook.value;
+
+        console.log("timeStamp: ", timeStamp);
+        console.log("name: ", writerName);
+        console.log("contents: ", writerGuestBook);
+
+        firestore.collection("guest_book").doc("books").set({
+            name: writerName,
+            contents: writerGuestBook,
+        }).then(function () {
+            console.log("Status saved");
+
+        }).catch(function (error) {
+            console.error("Error adding document: ", error);
+        });
+
+        inputName.value = "";
+        inputGuestBook.value = "";
+
+        console.log("done")
+    });
+</script>
+
+</body>
+</html>

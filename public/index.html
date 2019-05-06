@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link href="css/cardslider.css" rel="stylesheet">
+    <link href="css/normalize.css" rel="stylesheet">
+    <link href="css/demo.css" rel="stylesheet">
+
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Mono' rel='stylesheet' type='text/css'>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!--Firebase-->
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-firestore.js"></script>
+
+    <title>Card Slider</title>
+
+    <style>
+        body {
+            background: #FFDD00;
+        }
+    </style>
+</head>
+<body>
+
+<img class="img-fluid" src="img/respond-top.jpg" alt=""/>
+
+<main class="main" tabindex="-1">
+    <table id="factory_table" class="table" style="margin-top: 20px;">
+    </table>
+    <div class="my-slider cardslider">
+        <ul class="cardslider__cards" id="my_card">
+            <li class="cardslider__card">Welcome to the Draftline Seoul!🍺</li>
+        </ul>
+    </div>
+</main>
+
+<img class="img-fluid" src="img/respond-bottom.jpg" alt=""/>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery.cardslider.min.js"></script>
+
+<script>
+
+    const cardSlider = $('.my-slider').cardslider({
+        swipe: true,
+        dots: false,
+        loop: true,
+        nav: false
+    }).data('cardslider');
+
+    $('.skiplink').on('click', function (e) {
+        e.preventDefault();
+        cardSlider.changeCardTo('last');
+    });
+
+    setInterval(function() {
+        cardSlider.nextCard();
+        console.log("interval test")
+    }, 5000);
+
+    firebase.initializeApp({
+        apiKey: '',
+        authDomain: '',
+        projectId: ''
+    });
+
+    const firestore = firebase.firestore();
+    firestore.collection("guest_book").doc('books').onSnapshot(function (doc) {
+
+        console.log("doc.exists: ", doc.exists);
+
+        if (doc.exists) {
+            const name = doc.data().name;
+            const contents = doc.data().contents;
+
+            console.log("name: ", name);
+            console.log("contents: ", contents);
+
+            let rowItem = "<li class='cardslider__card center'>";
+            rowItem += name;
+            rowItem += "</br>";
+            rowItem += "----------------";
+            rowItem += "</br>";
+            rowItem += "<h1>" + contents + "</h1>";
+            rowItem += "</li>";
+            console.log("rowItem : ", rowItem);
+            $('#my_card').append(rowItem);
+
+            cardSlider.destroy();
+            cardSlider.init();
+
+            // console.log(document.documentElement.innerHTML);
+            cardSlider.changeCardTo('last');
+            console.log("Current data: ", doc.data());
+
+            firestore.collection("history").add({
+                name: name,
+                contents: contents,
+            }).then(function () {
+                console.log("Status saved");
+            }).catch(function (error) {
+                console.error("Error adding document: ", error);
+            });
+        }
+
+    });
+</script>
+</body>
+</html>
